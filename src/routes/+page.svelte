@@ -33,14 +33,12 @@
 	});
 
 	const neonColors = [
-		'#CFFF04', // Neon Yellow
 		'#4D4DFF', // Neon Blue
 		'#FF6EC7', // Neon Pink
 		'#944dff', // Neon Purple
 		'#FF2500', // Neon Red
 		'#FFA500', // Neon Orange
-		'#FF00FF', // Neon Magenta
-		'#AAFF00' // Neon Lime
+		'#FF00FF' // Neon Magenta
 	];
 
 	function calculateCursorSize(ownZoomLevel: number, otherZoomLevel: number) {
@@ -89,7 +87,7 @@
 	}
 
 	function initWebsockets() {
-		ws = new WebSocket('ws://localhost:3000');
+		ws = new WebSocket('wss://ws.mapster.club');
 		ws.onopen = () => {
 			ws.onmessage = (event) => {
 				try {
