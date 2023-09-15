@@ -125,7 +125,7 @@
 				sources: {
 					protomaps: {
 						type: 'vector',
-						url: 'pmtiles://https://d2mwjre38pvsaf.cloudfront.net/world.pmtiles' //'pmtiles://http://localhost:8080/world.pmtiles'
+						url: 'pmtiles://https://map.mapster.club/world.pmtiles' //'pmtiles://http://localhost:8080/world.pmtiles'
 					}
 				},
 				layers: layers('protomaps', 'light')
