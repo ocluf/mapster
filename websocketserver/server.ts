@@ -1,8 +1,34 @@
+import { type } from 'os';
 import { v4 } from 'uuid';
+
+type Message =
+	| {
+			type: 'updatePos';
+			data: ClientInfo;
+	  }
+	| {
+			type: 'createPin';
+			data: {
+				title: string;
+				body: string;
+				pinType: 'recommendation' | 'warning' | 'discussion' | 'question';
+				location: string;
+			};
+	  };
 
 type ClientInfo = {
 	lnglat: { lng: number; lat: number };
 	zoomlevel: number;
+	mobile: boolean;
+};
+
+type Pin = {
+	id: string;
+	title: string;
+	body: string;
+	pinType: 'recommendation' | 'warning' | 'discussion' | 'question';
+	location: string;
+	lnglat: { lng: number; lat: number };
 };
 
 const clientMap = new Map<string, ClientInfo>();
@@ -15,18 +41,31 @@ const server = Bun.serve<{ clientId: string }>({
 			}
 		});
 		if (success) return undefined;
+
 		return new Response('Upgrade failed :(', { status: 500 });
 	},
 	websocket: {
 		// define websocket handlers
 		async open(ws) {
-			ws.send(JSON.stringify({ clientId: ws.data.clientId }));
+			console.log('open');
+			const message = JSON.stringify({
+				type: 'setClientId',
+				data: ws.data.clientId
+			});
+			ws.send(message);
 			ws.subscribe('all');
 		},
-		async message(ws, message) {
+		async message(ws, m) {
 			try {
-				const data = JSON.parse(message as string);
-				clientMap.set(ws.data.clientId, { lnglat: data.lnglat, zoomlevel: data.zoomlevel });
+				const message = JSON.parse(m as string);
+
+				if (message.type === 'updatePos') {
+					clientMap.set(ws.data.clientId, {
+						lnglat: message.data.lnglat,
+						zoomlevel: message.data.zoomlevel,
+						mobile: message.data.mobile
+					});
+				}
 			} catch (error) {
 				console.error(error);
 			}
@@ -42,85 +81,14 @@ setInterval(() => {
 	const allClientInfo = Array.from(clientMap.entries()).map(([clientId, info]) => ({
 		lnglat: info.lnglat,
 		zoomlevel: info.zoomlevel,
-		clientId: clientId
+		clientId: clientId,
+		mobile: info.mobile
 	}));
-	// allClientInfo.push({
-	// 	clientId: 'test1',
-	// 	lnglat: { lat: 0, lng: -120.0 },
-	// 	zoomlevel: 1
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test2',
-	// 	lnglat: { lat: 0, lng: -110.4194 },
-	// 	zoomlevel: 2
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test3',
-	// 	lnglat: { lat: 0, lng: -100.1278 },
-	// 	zoomlevel: 3
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test4',
-	// 	lnglat: { lat: 0, lng: -90.0 },
-	// 	zoomlevel: 4
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test5',
-	// 	lnglat: { lat: 0, lng: -80.0 },
-	// 	zoomlevel: 5
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test6',
-	// 	lnglat: { lat: 0, lng: -70.0 },
-	// 	zoomlevel: 6
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test7',
-	// 	lnglat: { lat: 0, lng: -60.0 },
-	// 	zoomlevel: 7
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test8',
-	// 	lnglat: { lat: 0, lng: -50.0 },
-	// 	zoomlevel: 8
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test9',
-	// 	lnglat: { lat: 0, lng: -40.0 },
-	// 	zoomlevel: 9
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test10',
-	// 	lnglat: { lat: 0, lng: -30.0 },
-	// 	zoomlevel: 10
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test11',
-	// 	lnglat: { lat: 0, lng: -20.0 },
-	// 	zoomlevel: 11
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test12',
-	// 	lnglat: { lat: 0, lng: -10.0 },
-	// 	zoomlevel: 12
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test13',
-	// 	lnglat: { lat: 0, lng: 0.0 },
-	// 	zoomlevel: 13
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test14',
-	// 	lnglat: { lat: 0, lng: 10.0 },
-	// 	zoomlevel: 14
-	// });
-	// allClientInfo.push({
-	// 	clientId: 'test15',
-	// 	lnglat: { lat: 0, lng: 20.0 },
-	// 	zoomlevel: 15
-	// });
-
-	server.publish('all', JSON.stringify(allClientInfo));
+	const message = JSON.stringify({
+		type: 'updateClientInfo',
+		data: allClientInfo
+	});
+	server.publish('all', message);
 }, 16);
 
 console.log(`Listening on ${server.hostname}:${server.port}`);

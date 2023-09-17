@@ -20,7 +20,7 @@ const config = {
 		skeleton({
 			themes: {
 				// Register each theme within this array:
-				preset: ['skeleton', 'modern', 'crimson']
+				preset: ['wintry']
 			}
 		})
 	]
