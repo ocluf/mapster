@@ -9,7 +9,7 @@
 	let showEmailValidation = false;
 	let showCheckEmailMessage = false;
 	let email = '';
-	$: supabase = $modalStore[0].meta?.supabase;
+	$: supabase = $modalStore[0]?.meta?.supabase;
 
 	$: {
 		if (validateEmail(email)) {
